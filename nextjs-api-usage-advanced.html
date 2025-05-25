@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next.js API 高度な使い方ガイド</title>
+    <link rel="stylesheet" href="css/advanced.css">
+    <link rel="stylesheet" href="css/header.css">
+    <style>body { padding-top: 70px; }</style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <h1>Next.js API 高度な使い方ガイド</h1>
+
+        <div class="topic">
+            <h2>1. APIミドルウェアの実装</h2>
+            <p>APIルートに対してミドルウェアを実装することで、リクエストの前処理や認証を行うことができます。</p>
+            <div class="code-block">
+                <pre>
+// middleware.ts
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+    // APIキーの検証
+    const apiKey = request.headers.get('x-api-key')
+    if (!apiKey) {
+        return new NextResponse(
+            JSON.stringify({ error: 'API key is required' }),
+            { status: 401 }
+        )
+    }
+
+    // 処理を続行
+    return NextResponse.next()
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>2. 高度なエラーハンドリング</h2>
+            <p>カスタムエラーハンドリングを実装して、より詳細なエラー情報を提供します。</p>
+            <div class="code-block">
+                <pre>
+// lib/errors.ts
+export class APIError extends Error {
+    constructor(
+        public statusCode: number,
+        public message: string,
+        public details?: any
+    ) {
+        super(message)
+    }
+}
+
+// pages/api/data.ts
+import { APIError } from '@/lib/errors'
+
+export default async function handler(req, res) {
+    try {
+        // データベース処理など
+        throw new APIError(400, 'Invalid request', {
+            field: 'email',
+            issue: 'format'
+        })
+    } catch (error) {
+        if (error instanceof APIError) {
+            return res.status(error.statusCode).json({
+                error: error.message,
+                details: error.details
+            })
+        }
+        return res.status(500).json({
+            error: 'Internal Server Error'
+        })
+    }
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>3. レート制限の実装</h2>
+            <p>APIリクエストの制限を実装して、サーバーの過負荷を防ぎます。</p>
+            <div class="code-block">
+                <pre>
+import rateLimit from 'express-rate-limit'
+import { NextApiRequest, NextApiResponse } from 'next'
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15分
+    max: 100 // IPアドレスごとの最大リクエスト数
+})
+
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
+    try {
+        await limiter(req, res)
+        // 通常の処理を続行
+    } catch {
+        return res.status(429).json({
+            error: 'Too many requests'
+        })
+    }
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>4. キャッシュの最適化</h2>
+            <p>APIレスポンスのキャッシュを実装して、パフォーマンスを向上させます。</p>
+            <div class="code-block">
+                <pre>
+// pages/api/cached-data.ts
+import { NextApiRequest, NextApiResponse } from 'next'
+import NodeCache from 'node-cache'
+
+const cache = new NodeCache({ stdTTL: 600 }) // 10分間キャッシュ
+
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
+    const cacheKey = 'data-key'
+    const cachedData = cache.get(cacheKey)
+
+    if (cachedData) {
+        return res.status(200).json(cachedData)
+    }
+
+    // データベースからデータを取得
+    const data = await fetchDataFromDB()
+    
+    // キャッシュに保存
+    cache.set(cacheKey, data)
+    
+    return res.status(200).json(data)
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>5. WebSocketの統合</h2>
+            <p>リアルタイム通信のためのWebSocket実装例です。</p>
+            <div class="code-block">
+                <pre>
+// pages/api/socket.ts
+import { Server } from 'socket.io'
+import { NextApiRequest } from 'next'
+
+const ioHandler = (req: NextApiRequest, res: any) => {
+    if (!res.socket.server.io) {
+        const io = new Server(res.socket.server)
+        
+        io.on('connection', socket => {
+            socket.on('message', data => {
+                io.emit('message', data)
+            })
+        })
+        
+        res.socket.server.io = io
+    }
+    
+    res.end()
+}
+
+export default ioHandler</pre>
+            </div>
+        </div>
+
+        <div class="note">
+            <p><strong>注意:</strong> 上記の実装例は、本番環境で使用する前に適切なセキュリティ対策を施す必要があります。</p>
+        </div>
+
+        <div class="navigation">
+            <p><a href="nextjs-api-usage-beginner.html">← 初級者向けガイドへ</a></p>
+            <p><a href="index.html">トップページへ戻る</a></p>
+        </div>
+    </div>
+    <script src="js/header.js"></script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 用語集</title>
+    <link rel="stylesheet" href="css/advanced.css">
+    <link rel="stylesheet" href="css/header.css">
+    <style>
+        body { padding-top: 70px; }
+        .term {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-left: 4px solid #0070f3;
+            background-color: #f8f9fa;
+        }
+        
+        .term h3 {
+            color: #0070f3;
+            margin-bottom: 10px;
+        }
+        
+        .term-category {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0070f3;
+        }
+        
+        .term-english {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        
+        .example {
+            background-color: #f1f1f1;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <h1>API 用語集</h1>
+        
+        <div class="topic">
+            <h2 class="term-category">基本概念</h2>
+            
+            <div class="term">
+                <h3>API</h3>
+                <div class="term-english">Application Programming Interface</div>
+                <p>アプリケーションやシステム同士が情報をやり取りするための仕様や規約。異なるソフトウェア間での通信を可能にします。</p>
+                <div class="example">
+                    例：WebアプリケーションからTwitter APIを使用して、ツイートを投稿する
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>エンドポイント</h3>
+                <div class="term-english">Endpoint</div>
+                <p>APIにアクセスするための特定のURL。それぞれのエンドポイントは特定の機能やリソースに対応します。</p>
+                <div class="example">
+                    例：<code>https://api.example.com/users</code> - ユーザー情報に関するエンドポイント
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>REST</h3>
+                <div class="term-english">Representational State Transfer</div>
+                <p>WebAPIを設計する際の主要なアーキテクチャスタイル。リソースベースでHTTPメソッドを使用した設計方法です。</p>
+                <div class="example">
+                    例：GET /users（ユーザー一覧取得）、POST /users（新規ユーザー作成）
+                </div>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2 class="term-category">HTTPメソッド</h2>
+            
+            <div class="term">
+                <h3>GET</h3>
+                <p>リソースの取得に使用されるメソッド。データの読み取りのみを行い、サーバーの状態を変更しません。</p>
+                <div class="example">
+                    例：<code>GET /api/articles</code> - 記事一覧の取得
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>POST</h3>
+                <p>新しいリソースの作成に使用されるメソッド。サーバーにデータを送信します。</p>
+                <div class="example">
+                    例：<code>POST /api/users</code> - 新規ユーザーの作成
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>PUT</h3>
+                <p>既存のリソースの更新に使用されるメソッド。リソース全体を置き換えます。</p>
+                <div class="example">
+                    例：<code>PUT /api/articles/123</code> - 記事の全体更新
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>PATCH</h3>
+                <p>リソースの部分的な更新に使用されるメソッド。</p>
+                <div class="example">
+                    例：<code>PATCH /api/users/456</code> - ユーザー情報の一部更新
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>DELETE</h3>
+                <p>リソースの削除に使用されるメソッド。</p>
+                <div class="example">
+                    例：<code>DELETE /api/posts/789</code> - 投稿の削除
+                </div>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2 class="term-category">レスポンス関連</h2>
+            
+            <div class="term">
+                <h3>ステータスコード</h3>
+                <div class="term-english">Status Code</div>
+                <p>APIリクエストの結果を示す3桁の数字。主要なものは以下の通り：</p>
+                <ul>
+                    <li>200: OK（成功）</li>
+                    <li>201: Created（作成成功）</li>
+                    <li>400: Bad Request（不正なリクエスト）</li>
+                    <li>401: Unauthorized（認証エラー）</li>
+                    <li>403: Forbidden（アクセス権限なし）</li>
+                    <li>404: Not Found（リソースが見つからない）</li>
+                    <li>500: Internal Server Error（サーバーエラー）</li>
+                </ul>
+            </div>
+
+            <div class="term">
+                <h3>レスポンス形式</h3>
+                <div class="term-english">Response Format</div>
+                <p>APIからのデータ返却形式。一般的にJSON形式が使用されます。</p>
+                <div class="example">
+<pre>{
+    "status": "success",
+    "data": {
+        "id": 123,
+        "name": "例文太郎"
+    }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2 class="term-category">認証とセキュリティ</h2>
+            
+            <div class="term">
+                <h3>APIキー</h3>
+                <div class="term-english">API Key</div>
+                <p>APIへのアクセスを制御するための文字列。リクエストヘッダーやクエリパラメータとして送信されます。</p>
+                <div class="example">
+                    例：<code>X-API-Key: abcd1234efgh5678</code>
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>JWT</h3>
+                <div class="term-english">JSON Web Token</div>
+                <p>認証情報を安全にやり取りするための規格。トークンベースの認証に使用されます。</p>
+                <div class="example">
+                    例：<code>Authorization: Bearer eyJhbGciOiJS...</code>
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>CORS</h3>
+                <div class="term-english">Cross-Origin Resource Sharing</div>
+                <p>異なるドメインからのAPIリクエストを制御するセキュリティ機能。</p>
+                <div class="example">
+                    例：<code>Access-Control-Allow-Origin: *</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2 class="term-category">その他の重要概念</h2>
+            
+            <div class="term">
+                <h3>レート制限</h3>
+                <div class="term-english">Rate Limiting</div>
+                <p>一定時間内のAPIリクエスト数を制限する機能。サーバーの負荷を制御します。</p>
+                <div class="example">
+                    例：1分間に100リクエストまで
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>ページネーション</h3>
+                <div class="term-english">Pagination</div>
+                <p>大量のデータを複数のページに分割して返す機能。</p>
+                <div class="example">
+                    例：<code>/api/posts?page=2&limit=20</code>
+                </div>
+            </div>
+
+            <div class="term">
+                <h3>キャッシュ</h3>
+                <div class="term-english">Cache</div>
+                <p>頻繁にアクセスされるデータを一時的に保存し、レスポンス時間を短縮する機能。</p>
+                <div class="example">
+                    例：<code>Cache-Control: max-age=3600</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <p><a href="index.html">トップページへ戻る</a></p>
+        </div>
+    </div>
+    <script src="js/header.js"></script>
+</body>
+</html>

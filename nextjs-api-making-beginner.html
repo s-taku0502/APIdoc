@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next.js API の作り方 - 初心者向けガイド</title>
+    <link rel="stylesheet" href="css/advanced.css">
+    <link rel="stylesheet" href="css/header.css">
+    <style>body { padding-top: 70px; }</style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <h1>Next.js API の作り方 - 初心者向けガイド</h1>
+
+        <div class="topic">
+            <h2>1. プロジェクトのセットアップ</h2>
+            <p>まずは、Next.jsプロジェクトを作成します。</p>
+            <div class="code-block">
+                <pre>
+# プロジェクトの作成
+npx create-next-app@latest my-api-project
+cd my-api-project
+
+# 必要なパッケージのインストール
+npm install axios</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>2. 最初のAPIエンドポイントを作成</h2>
+            <p>pages/api ディレクトリに最初のAPIファイルを作成します。</p>
+            <div class="code-block">
+                <pre>
+// pages/api/hello.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+
+type ResponseData = {
+    message: string
+}
+
+export default function handler(
+    req: NextApiRequest,
+    res: NextApiResponse<ResponseData>
+) {
+    res.status(200).json({ message: 'Hello from API!' })
+}</pre>
+            </div>
+            <p class="note">このAPIには <code>http://localhost:3000/api/hello</code> でアクセスできます。</p>
+        </div>
+
+        <div class="topic">
+            <h2>3. データを取得するAPIの作成</h2>
+            <p>ユーザー情報を取得するAPIを作成してみましょう。</p>
+            <div class="code-block">
+                <pre>
+// pages/api/users/index.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+
+// ユーザーの型定義
+type User = {
+    id: number
+    name: string
+    email: string
+}
+
+// サンプルデータ
+const users: User[] = [
+    { id: 1, name: '田中太郎', email: 'tanaka@example.com' },
+    { id: 2, name: '山田花子', email: 'yamada@example.com' }
+]
+
+export default function handler(
+    req: NextApiRequest,
+    res: NextApiResponse<User[] | { error: string }>
+) {
+    try {
+        res.status(200).json(users)
+    } catch (error) {
+        res.status(500).json({ error: 'ユーザー情報の取得に失敗しました' })
+    }
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>4. データを追加するAPIの作成</h2>
+            <p>新しいユーザーを追加するAPIを作成します。</p>
+            <div class="code-block">
+                <pre>
+// pages/api/users/create.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+
+export default function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: '許可されていないメソッドです' })
+    }
+
+    try {
+        const { name, email } = req.body
+
+        // バリデーション
+        if (!name || !email) {
+            return res.status(400).json({ 
+                error: '名前とメールアドレスは必須です' 
+            })
+        }
+
+        // 新しいユーザーの作成
+        const newUser = {
+            id: Date.now(),
+            name,
+            email
+        }
+
+        // 実際のプロジェクトではここでデータベースに保存します
+
+        res.status(201).json(newUser)
+    } catch (error) {
+        res.status(500).json({ error: 'ユーザーの作成に失敗しました' })
+    }
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>5. APIのテスト方法</h2>
+            <p>作成したAPIをテストする方法を学びましょう。</p>
+            <div class="code-block">
+                <pre>
+// フロントエンドからのAPIの呼び出し方
+import { useState } from 'react'
+
+export default function Home() {
+    const [result, setResult] = useState('')
+
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch('/api/users')
+            const data = await response.json()
+            setResult(JSON.stringify(data, null, 2))
+        } catch (error) {
+            console.error('エラー:', error)
+        }
+    }
+
+    return (
+        <div>
+            <button onClick={fetchUsers}>
+                ユーザー一覧を取得
+            </button>
+            <pre>{result}</pre>
+        </div>
+    )
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>6. エラーハンドリングのベストプラクティス</h2>
+            <p>APIでのエラー処理の基本的な方法です。</p>
+            <div class="code-block">
+                <pre>
+// lib/error-handler.ts
+export class APIError extends Error {
+    constructor(
+        public statusCode: number,
+        message: string
+    ) {
+        super(message)
+        this.name = 'APIError'
+    }
+}
+
+// pages/api/users/[id].ts
+import { APIError } from '../../../lib/error-handler'
+
+export default function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
+    try {
+        const { id } = req.query
+
+        if (!id) {
+            throw new APIError(400, 'IDが指定されていません')
+        }
+
+        // ユーザー取得のロジック...
+
+    } catch (error) {
+        if (error instanceof APIError) {
+            res.status(error.statusCode).json({ 
+                error: error.message 
+            })
+        } else {
+            res.status(500).json({ 
+                error: '予期せぬエラーが発生しました' 
+            })
+        }
+    }
+}</pre>
+            </div>
+        </div>
+
+        <div class="note">
+            <h3>重要なポイント</h3>
+            <ul>
+                <li>APIルートは pages/api ディレクトリ内に作成します</li>
+                <li>各ファイルは自動的にAPIエンドポイントになります</li>
+                <li>TypeScriptを使用することで型安全性が向上します</li>
+                <li>適切なエラーハンドリングを常に実装しましょう</li>
+                <li>HTTP メソッドに応じて適切なステータスコードを返しましょう</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <p><a href="nextjs-api-usage-advanced.html">上級者向けガイドへ →</a></p>
+            <p><a href="index.html">トップページへ戻る</a></p>
+        </div>
+    </div>
+    <script src="js/header.js"></script>
+</body>
+</html>

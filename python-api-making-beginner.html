@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python API の作り方 - 初心者向けガイド</title>
+    <link rel="stylesheet" href="css/advanced.css">
+    <link rel="stylesheet" href="css/header.css">
+    <style>body { padding-top: 70px; }</style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <h1>Python API の作り方 - 初心者向けガイド</h1>
+
+        <div class="topic">
+            <h2>1. 環境のセットアップ</h2>
+            <p>FastAPIを使用してAPIを作成するための準備をします。</p>
+            <div class="code-block">
+                <pre>
+# 仮想環境の作成と有効化
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# または
+.\venv\Scripts\activate  # Windows
+
+# 必要なパッケージのインストール
+pip install fastapi uvicorn</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>2. 最初のAPIエンドポイント</h2>
+            <p>シンプルなAPIエンドポイントを作成します。</p>
+            <div class="code-block">
+                <pre>
+# main.py
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello, World!"}
+
+# サーバーの起動方法
+# uvicorn main:app --reload</pre>
+            </div>
+            <p class="note">サーバーを起動すると、<code>http://localhost:8000</code> でアクセスできます。</p>
+        </div>
+
+        <div class="topic">
+            <h2>3. パスパラメータの使用</h2>
+            <p>URLからパラメータを受け取るAPIを作成します。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int):
+    return {"item_id": item_id, "name": f"アイテム{item_id}"}
+
+# http://localhost:8000/items/1 でアクセス可能</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>4. クエリパラメータの使用</h2>
+            <p>URLクエリからデータを受け取る方法です。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI
+from typing import Optional
+
+app = FastAPI()
+
+@app.get("/search")
+def search_items(
+    keyword: str,
+    max_results: Optional[int] = 10
+):
+    return {
+        "keyword": keyword,
+        "max_results": max_results,
+        "items": [f"結果{i+1}" for i in range(max_results)]
+    }
+
+# http://localhost:8000/search?keyword=本&max_results=5</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>5. POSTリクエストの処理</h2>
+            <p>データを送信して処理するAPIを作成します。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class User(BaseModel):
+    name: str
+    email: str
+    age: Optional[int] = None
+
+@app.post("/users/")
+def create_user(user: User):
+    return {
+        "message": "ユーザーを作成しました",
+        "user": user
+    }</pre>
+            </div>
+            <p>リクエスト例：</p>
+            <div class="code-block">
+                <pre>
+curl -X POST "http://localhost:8000/users/" \
+     -H "Content-Type: application/json" \
+     -d '{"name": "山田太郎", "email": "yamada@example.com", "age": 30}'</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>6. エラーハンドリング</h2>
+            <p>APIでのエラー処理の基本的な方法です。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int):
+    if user_id <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="ユーザーIDは1以上の正の整数である必要があります"
+        )
+    
+    if user_id > 100:
+        raise HTTPException(
+            status_code=404,
+            detail="ユーザーが見つかりません"
+        )
+    
+    return {"user_id": user_id, "name": f"ユーザー{user_id}"}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>7. データベースとの連携</h2>
+            <p>SQLAlchemyを使用した基本的なデータベース操作の例です。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI, Depends
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
+
+# データベース設定
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+SessionLocal = sessionmaker(engine)
+Base = declarative_base()
+
+# モデル定義
+class UserModel(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    email = Column(String, unique=True, index=True)
+
+Base.metadata.create_all(bind=engine)
+
+# データベースセッションの依存関係
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+app = FastAPI()
+
+@app.post("/users/")
+def create_user(user: User, db: Session = Depends(get_db)):
+    db_user = UserModel(name=user.name, email=user.email)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user</pre>
+            </div>
+        </div>
+
+        <div class="note">
+            <h3>重要なポイント</h3>
+            <ul>
+                <li>FastAPIは自動的にOpenAPI（Swagger）ドキュメントを生成します（/docs にアクセス）</li>
+                <li>Pydanticモデルを使用することで、自動的にバリデーションが行われます</li>
+                <li>非同期処理を使用する場合は、関数に `async` をつけます</li>
+                <li>本番環境では適切なセキュリティ設定を行うことが重要です</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <p><a href="python-api-making-advanced.html">上級者向けガイドへ →</a></p>
+            <p><a href="index.html">トップページへ戻る</a></p>
+        </div>
+    </div>
+    <script src="js/header.js"></script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next.js API入門ガイド - 初心者向け</title>
+    <link rel="stylesheet" href="css/header.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding-top: 70px; /* Added padding-top */
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #555;
+            font-size: 1.4em;
+            margin: 25px 0 15px 0;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-prev::before {
+            content: "←";
+            margin-right: 8px;
+        }
+
+        .nav-next::after {
+            content: "→";
+            margin-left: 8px;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .example {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .get { background: #c6f6d5; color: #22543d; }
+        .post { background: #bee3f8; color: #1a365d; }
+        .put { background: #fbb6ce; color: #702459; }
+        .delete { background: #fed7d7; color: #742a2a; }
+        
+        .toc {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <!-- Removed existing header block -->
+        <!-- The h1 and subtitle will now be part of the main content flow -->
+        <h1>🚀 Next.js API入門ガイド</h1>
+        <p class="subtitle" style="text-align: center; margin-bottom: 40px; font-size: 1.2em; opacity: 0.9;">Next.jsでのAPI開発をわかりやすく解説します</p>
+
+        <div class="toc section">
+            <h2>📋 目次</h2>
+            <ul>
+                <li><a href="#nextjs-api">Next.jsのAPI機能とは？</a></li>
+                <li><a href="#api-routes">APIルートの基本</a></li>
+                <li><a href="#first-api">最初のAPIを作る</a></li>
+                <li><a href="#dynamic-routes">動的ルーティング</a></li>
+                <li><a href="#data-handling">データの取り扱い方</a></li>
+                <li><a href="#middleware">ミドルウェアの使い方</a></li>
+                <li><a href="#examples">実践例</a></li>
+                <li><a href="#best-practices">ベストプラクティス</a></li>
+            </ul>
+        </div>
+
+        <section id="nextjs-api" class="section">
+            <h2>🤔 Next.jsのAPI機能とは？</h2>
+            
+            <div class="highlight">
+                Next.jsのAPI機能は、同じNext.jsプロジェクト内でバックエンドAPIを作成できる強力な機能です。
+                フロントエンドとバックエンドを一つのプロジェクトで管理できます。
+            </div>
+            
+            <h3>特徴と利点</h3>
+            <ul>
+                <li>📁 <strong>簡単なファイル構造</strong>：pages/apiフォルダ内にファイルを作るだけでAPIが作れる</li>
+                <li>🔄 <strong>自動ルーティング</strong>：ファイル名がそのままAPIのパスになる</li>
+                <li>⚡ <strong>高速な開発</strong>：フロントエンドとバックエンドを同時に開発可能</li>
+                <li>🛡️ <strong>セキュリティ</strong>：サーバーサイドで実行されるため、機密情報を安全に扱える</li>
+            </ul>
+
+            <div class="nav-links">
+                <a href="#nextjs-api" class="nav-prev">TOPに戻る</a>
+                <a href="#api-routes" class="nav-next">APIルートの基本</a>
+            </div>
+        </section>
+
+        <section id="api-routes" class="section">
+            <h2>📝 APIルートの基本</h2>
+            
+            <div class="highlight">
+                APIルートは <code>pages/api</code> フォルダ内に作成します。
+                各ファイルが自動的にAPIエンドポイントになります。
+            </div>
+
+            <h3>基本的なファイル構造</h3>
+            <div class="code-block">
+project/
+├── pages/
+│   ├── api/
+│   │   ├── hello.js       // /api/hello
+│   │   ├── users/
+│   │   │   ├── index.js   // /api/users
+│   │   │   └── [id].js    // /api/users/123
+│   │   └── posts.js       // /api/posts
+│   └── index.js
+└── package.json</div>
+
+            <div class="nav-links">
+                <a href="#nextjs-api" class="nav-prev">Next.jsのAPI機能とは？</a>
+                <a href="#first-api" class="nav-next">最初のAPIを作る</a>
+            </div>
+        </section>
+
+        <section id="first-api" class="section">
+            <h2>💫 最初のAPIを作る</h2>
+            
+            <h3>シンプルなAPIエンドポイント</h3>
+            <div class="example">
+                <p>pages/api/hello.js に最初のAPIを作ってみましょう：</p>
+                <div class="code-block">
+export default function handler(req, res) {
+  res.status(200).json({ message: 'こんにちは！' })
+}</div>
+            </div>
+
+            <h3>HTTPメソッドの処理</h3>
+            <div class="code-block">
+export default function handler(req, res) {
+  switch (req.method) {
+    case 'GET':
+      // GETリクエストの処理
+      res.status(200).json({ message: 'データを取得しました' })
+      break
+    case 'POST':
+      // POSTリクエストの処理
+      res.status(201).json({ message: 'データを作成しました' })
+      break
+    default:
+      res.setHeader('Allow', ['GET', 'POST'])
+      res.status(405).end(`Method ${req.method} Not Allowed`)
+  }
+}</div>
+
+            <div class="nav-links">
+                <a href="#api-routes" class="nav-prev">APIルートの基本</a>
+                <a href="#dynamic-routes" class="nav-next">動的ルーティング</a>
+            </div>
+        </section>
+
+        <section id="dynamic-routes" class="section">
+            <h2>🔄 動的ルーティング</h2>
+            
+            <h3>動的なAPIルート</h3>
+            <div class="example">
+                <p>pages/api/users/[id].js でユーザーIDに基づく動的なルートを作成：</p>
+                <div class="code-block">
+export default function handler(req, res) {
+  const { id } = req.query
+
+  res.status(200).json({
+    id: id,
+    name: `ユーザー${id}`,
+    email: `user${id}@example.com`
+  })
+}</div>
+            </div>
+
+            <div class="nav-links">
+                <a href="#first-api" class="nav-prev">最初のAPIを作る</a>
+                <a href="#data-handling" class="nav-next">データの取り扱い方</a>
+            </div>
+        </section>
+
+        <section id="data-handling" class="section">
+            <h2>📊 データの取り扱い方</h2>
+            
+            <h3>リクエストデータの取得</h3>
+            <div class="code-block">
+export default function handler(req, res) {
+  if (req.method === 'POST') {
+    // POSTデータを取得
+    const { name, email } = req.body
+
+    // データの検証
+    if (!name || !email) {
+      return res.status(400).json({ error: '名前とメールアドレスは必須です' })
+    }
+
+    // データ処理...
+    res.status(201).json({ message: 'ユーザーを作成しました', user: { name, email } })
+  }
+}</div>
+
+            <h3>クエリパラメータの使用</h3>
+            <div class="code-block">
+// /api/search?q=keyword のように使用
+export default function handler(req, res) {
+  const { q } = req.query
+  
+  if (!q) {
+    return res.status(400).json({ error: '検索キーワードを指定してください' })
+  }
+
+  // 検索処理...
+  res.status(200).json({ results: [`${q}の検索結果`] })
+}</div>
+
+            <div class="nav-links">
+                <a href="#dynamic-routes" class="nav-prev">動的ルーティング</a>
+                <a href="#middleware" class="nav-next">ミドルウェアの使い方</a>
+            </div>
+        </section>
+
+        <section id="middleware" class="section">
+            <h2>🔐 ミドルウェアの使い方</h2>
+            
+            <h3>認証ミドルウェアの例</h3>
+            <div class="code-block">
+// middleware/auth.js
+export function withAuth(handler) {
+  return async function(req, res) {
+    // トークンの確認
+    const token = req.headers.authorization
+
+    if (!token) {
+      return res.status(401).json({ error: '認証が必要です' })
+    }
+
+    // 認証済みの場合、本来のハンドラを実行
+    return handler(req, res)
+  }
+}
+
+// pages/api/protected.js
+import { withAuth } from '../../middleware/auth'
+
+function handler(req, res) {
+  res.status(200).json({ message: '保護されたデータです' })
+}
+
+export default withAuth(handler)</div>
+            <div class="nav-links">
+                <a href="#data-handling" class="nav-prev">データの取り扱い方</a>
+                <a href="#examples" class="nav-next">実践例</a>
+            </div>
+        </section>
+
+        <section id="examples" class="section">
+            <h2>💻 実践例</h2>
+            
+            <h3>TODOリストAPI</h3>
+            <div class="code-block">
+// pages/api/todos.js
+let todos = []
+
+export default function handler(req, res) {
+  switch (req.method) {
+    case 'GET':
+      res.status(200).json(todos)
+      break
+
+    case 'POST':
+      const newTodo = {
+        id: Date.now(),
+        text: req.body.text,
+        completed: false
+      }
+      todos.push(newTodo)
+      res.status(201).json(newTodo)
+      break
+
+    case 'PUT':
+      const { id, completed } = req.body
+      const todo = todos.find(t => t.id === id)
+      if (todo) {
+        todo.completed = completed
+        res.status(200).json(todo)
+      } else {
+        res.status(404).json({ error: 'TODOが見つかりません' })
+      }
+      break
+
+    default:
+      res.setHeader('Allow', ['GET', 'POST', 'PUT'])
+      res.status(405).end(`Method ${req.method} Not Allowed`)
+  }
+}</div>
+
+            <h3>フロントエンドからの使用例</h3>
+            <div class="code-block">
+// pages/index.js
+import { useState, useEffect } from 'react'
+
+export default function Home() {
+  const [todos, setTodos] = useState([])
+
+  useEffect(() => {
+    // TODOリストの取得
+    fetch('/api/todos')
+      .then(res => res.json())
+      .then data => setTodos(data))
+  }, [])
+
+  const addTodo = async (text) => {
+    const res = await fetch('/api/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text })
+    })
+    const newTodo = await res.json()
+    setTodos([...todos, newTodo])
+  }
+
+  return (
+    <div>
+      {/* UIの実装 */}
+    </div>
+  )
+}</div>
+            <div class="nav-links">
+                <a href="#middleware" class="nav-prev">ミドルウェアの使い方</a>
+                <a href="#best-practices" class="nav-next">ベストプラクティス</a>
+            </div>
+        </section>
+
+        <section id="best-practices" class="section">
+            <h2>✅ ベストプラクティス</h2>
+            
+            <div class="highlight">
+                Next.jsでAPIを開発する際の重要なポイントをまとめました。
+            </div>
+
+            <h3>1. エラーハンドリング</h3>
+            <div class="code-block">
+export default function handler(req, res) {
+  try {
+    // 処理
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'サーバーエラーが発生しました' })
+  }
+}</div>
+
+            <h3>2. 環境変数の使用</h3>
+            <div class="example">
+                <p>.env.localファイルに環境変数を設定：</p>
+                <div class="code-block">
+DATABASE_URL=postgresql://user:password@localhost:5432/mydb
+API_KEY=your-secret-key</div>
+                <p>APIルートで環境変数を使用：</p>
+                <div class="code-block">
+export default function handler(req, res) {
+  const dbUrl = process.env.DATABASE_URL
+  const apiKey = process.env.API_KEY
+  // ...
+}</div>
+            </div>
+
+            <h3>3. バリデーション</h3>
+            <div class="code-block">
+export default function handler(req, res) {
+  const { email, password } = req.body
+
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: '有効なメールアドレスを入力してください' })
+  }
+
+  if (!password || password.length < 8) {
+    return res.status(400).json({ error: 'パスワードは8文字以上必要です' })
+  }
+
+  // 処理を続行...
+}</div>
+
+            <h3>4. CORS設定</h3>
+            <div class="code-block">
+import Cors from 'cors'
+
+// CORSミドルウェアの初期化
+const cors = Cors({
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+})
+
+// ミドルウェアの実行
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result)
+      }
+      return resolve(result)
+    })
+  })
+}
+
+export default async function handler(req, res) {
+  await runMiddleware(req, res, cors)
+  // APIの処理...
+}</div>
+            <div class="nav-links">
+                <a href="#examples" class="nav-prev">実践例</a>
+                <a href="#top" class="nav-next">TOPに戻る</a>
+            </div>
+        </section>
+
+        <div class="section">
+            <h2>🎓 まとめ</h2>
+            <div class="highlight">
+                <h3>Next.js APIの利点</h3>
+                <ol>
+                    <li><strong>簡単な実装</strong> - ファイルベースのルーティング</li>
+                    <li><strong>フルスタック開発</strong> - フロントエンドとバックエンドを一つのプロジェクトで</li>
+                    <li><strong>高いパフォーマンス</strong> - サーバーレス関数として実行</li>
+                    <li><strong>TypeScriptサポート</strong> - 型安全な開発が可能</li>
+                </ol>
+                
+                <p style="margin-top: 20px;"><strong>📚 次のステップ</strong></p>
+                <ul>
+                    <li>データベースとの連携（Prisma, MongoDB等）</li>
+                    <li>認証システムの実装（NextAuth.js）</li>
+                    <li>APIドキュメントの自動生成</li>
+                    <li>テストの作成と実行</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer style="text-align: center; margin-top: 50px; padding: 30px; background: #667eea; color: white; border-radius: 10px;">
+            <h3>🎉 Next.js APIの世界へようこそ！</h3>
+            <p>このガイドがあなたのNext.js API開発の良い出発点となることを願っています。<br>
+            実際にコードを書いて、様々な機能を試してみましょう！</p>
+            <p style="margin-top: 10px">
+                <a href="index.html" style="color: white; text-decoration: underline;">APIの基本ガイドに戻る</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="js/header.js"></script>
+    <script>
+        // スムーズスクロール
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

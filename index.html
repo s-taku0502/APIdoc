@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 初心者ガイド - わかりやすいドキュメント</title>
+    <link rel="stylesheet" href="css/header.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding-top: 70px; /* Ensures content is below fixed header */
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #555;
+            font-size: 1.4em;
+            margin: 25px 0 15px 0;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .example {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .get { background: #c6f6d5; color: #22543d; }
+        .post { background: #bee3f8; color: #1a365d; }
+        .put { background: #fbb6ce; color: #702459; }
+        .delete { background: #fed7d7; color: #742a2a; }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .toc {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-prev::before {
+            content: "←";
+            margin-right: 8px;
+        }
+
+        .nav-next::after {
+            content: "→";
+            margin-left: 8px;
+        }
+
+        .guide-navigation {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
+        .guide-navigation a {
+            background: #667eea;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .guide-navigation a:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .nav-link {
+            display: inline-block;
+            margin: 10px 15px 10px 0;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .nav-link:hover {
+            background: #5a67d8;
+        }
+        
+        .status-code {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .status-200 { background: #c6f6d5; color: #22543d; }
+        .status-400 { background: #fed7d7; color: #742a2a; }
+        .status-401 { background: #fbb6ce; color: #702459; }
+        .status-404 { background: #fed7d7; color: #742a2a; }
+        .status-500 { background: #fed7d7; color: #742a2a; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <header> <!-- This is the page-specific header, not the site-wide navigation header -->
+            <h1>🚀 API 初心者ガイド</h1>
+            <p class="subtitle">APIとは何か？どう使うのか？わかりやすく解説します</p>
+        </header>
+
+        <div class="toc section">
+            <h2>📋 目次</h2>
+            <ul>
+                <li><a href="#what-is-api">APIとは？</a></li>
+                <li><a href="#why-api">なぜAPIが必要なの？</a></li>
+                <li><a href="#types">APIの種類</a></li>
+                <li><a href="#http-methods">HTTPメソッドの基本</a></li>
+                <li><a href="#request-response">リクエストとレスポンス</a></li>
+                <li><a href="#status-codes">ステータスコード</a></li>
+                <li><a href="#authentication">認証について</a></li>
+                <li><a href="#examples">実践例</a></li>
+                <li><a href="#tools">便利なツール</a></li>
+                <li><a href="#best-practices">ベストプラクティス</a></li>
+            </ul>
+        </div>
+
+        <section id="what-is-api" class="section">
+            <h2>🤔 APIとは？</h2>
+            
+            <div class="highlight">
+                <strong>API（Application Programming Interface）</strong>とは、異なるソフトウェア同士が情報をやり取りするためのルールや仕組みのことです。
+            </div>
+            
+            <h3>身近な例で理解しよう</h3>
+            <p>レストランを想像してください：</p>
+            <ul>
+                <li><strong>お客様（あなたのアプリ）</strong>：料理を注文したい</li>
+                <li><strong>ウェイター（API）</strong>：注文を受けて、キッチンに伝える</li>
+                <li><strong>キッチン（サーバー）</strong>：料理を作って、ウェイターに渡す</li>
+                <li><strong>料理（データ）</strong>：最終的にお客様に提供される</li>
+            </ul>
+            
+            <p>APIはこのウェイターの役割を果たします。あなたは料理の作り方を知らなくても、ウェイターに注文すれば料理が運ばれてきます。</p>
+
+            <div class="nav-links">
+                <a href="#" class="nav-prev">TOPに戻る</a>
+                <a href="#why-api" class="nav-next">なぜAPIが必要なの？</a>
+            </div>
+        </section>
+
+        <section id="why-api" class="section">
+            <h2>💡 なぜAPIが必要なの？</h2>
+            
+            <h3>APIの利点</h3>
+            <ol>
+                <li><strong>効率性</strong>：一から作らず、既存のサービスを活用できる</li>
+                <li><strong>専門性</strong>：それぞれの得意分野に集中できる</li>
+                <li><strong>セキュリティ</strong>：直接データベースにアクセスせず、安全にデータを取得</li>
+                <li><strong>標準化</strong>：統一された方法でデータをやり取り</li>
+            </ol>
+            
+            <div class="example">
+                <h4>実際の例：</h4>
+                <p>天気アプリを作るとき、世界中の気象データを自分で収集するのは大変です。でも、気象庁のAPIを使えば、簡単に最新の天気情報を取得できます。</p>
+            </div>
+
+            <div class="nav-links">
+                <a href="#what-is-api" class="nav-prev">APIとは？</a>
+                <a href="#types" class="nav-next">APIの種類</a>
+            </div>
+        </section>
+
+        <section id="types" class="section">
+            <h2>🔄 APIの種類</h2>
+            
+            <h3>1. REST API（最も一般的）</h3>
+            <ul>
+                <li>HTTP通信を使用</li>
+                <li>シンプルで理解しやすい</li>
+                <li>JSON形式でデータをやり取り</li>
+            </ul>
+            
+            <h3>2. GraphQL API</h3>
+            <ul>
+                <li>必要なデータだけを取得できる</li>
+                <li>1回のリクエストで複数の情報を取得</li>
+                <li>FacebookやGitHubで使用</li>
+            </ul>
+            
+            <h3>3. WebSocket API</h3>
+            <ul>
+                <li>リアルタイム通信が可能</li>
+                <li>チャットアプリやゲームで使用</li>
+                <li>双方向通信</li>
+            </ul>
+
+            <div class="nav-links">
+                <a href="#why-api" class="nav-prev">なぜAPIが必要なの？</a>
+                <a href="#http-methods" class="nav-next">HTTPメソッドの基本</a>
+            </div>
+        </section>
+
+        <section id="http-methods" class="section">
+            <h2>🌐 HTTPメソッドの基本</h2>
+            
+            <div class="highlight">
+                HTTPメソッドは、サーバーに対して「何をしたいか」を伝える動詞のようなものです。
+            </div>
+            
+            <h3>主要な4つのメソッド</h3>
+            
+            <div class="example">
+                <h4><span class="method get">GET</span>データを取得する</h4>
+                <p>📖 本を読む（情報を見るだけ、変更しない）</p>
+                <div class="code-block">GET /api/users/123</div>
+                <p>ユーザーID 123の情報を取得</p>
+            </div>
+            
+            <div class="example">
+                <h4><span class="method post">POST</span>新しいデータを作成する</h4>
+                <p>✏️ 新しい記事を書く</p>
+                <div class="code-block">POST /api/users</div>
+                <p>新しいユーザーを作成</p>
+            </div>
+            
+            <div class="example">
+                <h4><span class="method put">PUT</span>データを更新する</h4>
+                <p>📝 既存の記事を編集する</p>
+                <div class="code-block">PUT /api/users/123</div>
+                <p>ユーザーID 123の情報を更新</p>
+            </div>
+            
+            <div class="example">
+                <h4><span class="method delete">DELETE</span>データを削除する</h4>
+                <p>🗑️ 記事を削除する</p>
+                <div class="code-block">DELETE /api/users/123</div>
+                <p>ユーザーID 123を削除</p>
+            </div>
+
+            <div class="nav-links">
+                <a href="#types" class="nav-prev">APIの種類</a>
+                <a href="#request-response" class="nav-next">リクエストとレスポンス</a>
+            </div>
+        </section>
+
+        <section id="request-response" class="section">
+            <h2>📨 リクエストとレスポンス</h2>
+            
+            <h3>リクエスト（要求）の構成</h3>
+            <div class="code-block">
+GET /api/users/123 HTTP/1.1
+Host: example.com
+Authorization: Bearer your-token-here
+Content-Type: application/json
+            </div>
+            
+            <h3>レスポンス（応答）の構成</h3>
+            <div class="code-block">
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "田中太郎",
+  "email": "tanaka@example.com",
+  "created_at": "2025-01-15T10:30:00Z"
+}
+            </div>
+
+            <div class="nav-links">
+                <a href="#http-methods" class="nav-prev">HTTPメソッドの基本</a>
+                <a href="#status-codes" class="nav-next">ステータスコード</a>
+            </div>
+        </section>
+
+        <section id="status-codes" class="section">
+            <h2>📊 ステータスコード</h2>
+            
+            <div class="highlight">
+                ステータスコードは、サーバーからの「返事の種類」を示す3桁の数字です。
+            </div>
+            
+            <h3>よく見るステータスコード</h3>
+            
+            <div class="example">
+                <h4>成功系（200番台）</h4>
+                <ul>
+                    <li><span class="status-code status-200">200 OK</span> - 成功！欲しいデータが取得できました</li>
+                    <li><span class="status-code status-200">201 Created</span> - 新しいデータが作成されました</li>
+                </ul>
+            </div>
+            
+            <div class="example">
+                <h4>クライアントエラー（400番台）</h4>
+                <ul>
+                    <li><span class="status-code status-400">400 Bad Request</span> - リクエストに問題があります</li>
+                    <li><span class="status-code status-401">401 Unauthorized</span> - 認証が必要です</li>
+                    <li><span class="status-code status-404">404 Not Found</span> - 指定されたリソースが見つかりません</li>
+                </ul>
+            </div>
+            
+            <div class="example">
+                <h4>サーバーエラー（500番台）</h4>
+                <ul>
+                    <li><span class="status-code status-500">500 Internal Server Error</span> - サーバー側で問題が発生しました</li>
+                </ul>
+            </div>
+
+            <div class="nav-links">
+                <a href="#request-response" class="nav-prev">リクエストとレスポンス</a>
+                <a href="#authentication" class="nav-next">認証について</a>
+            </div>
+        </section>
+
+        <section id="authentication" class="section">
+            <h2>🔐 認証について</h2>
+            
+            <div class="highlight">
+                認証は「あなたが誰であるか」を証明し、「何にアクセスできるか」を決める仕組みです。
+            </div>
+            
+            <h3>主な認証方式</h3>
+            
+            <div class="example">
+                <h4>1. APIキー</h4>
+                <p>最もシンプルな方式。長い文字列をヘッダーに含めて送信。</p>
+                <div class="code-block">
+Authorization: Bearer sk_test_4eC39HqLyjWDarjtT1zdp7dc
+                </div>
+            </div>
+            
+            <div class="example">
+                <h4>2. JWT（JSON Web Token）</h4>
+                <p>ユーザー情報を含んだトークン。有効期限がある。</p>
+                <div class="code-block">
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                </div>
+            </div>
+            
+            <div class="example">
+                <h4>3. OAuth 2.0</h4>
+                <p>「Googleでログイン」「Twitterでログイン」などで使われる方式。</p>
+            </div>
+
+            <div class="nav-links">
+                <a href="#status-codes" class="nav-prev">ステータスコード</a>
+                <a href="#examples" class="nav-next">実践例</a>
+            </div>
+        </section>
+
+        <section id="examples" class="section">
+            <h2>💻 実践例</h2>
+            
+            <h3>例1：ユーザー情報を取得</h3>
+            <div class="code-block">
+// JavaScript（fetch API）を使用
+fetch('https://api.example.com/users/123', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer your-token-here',
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => {
+  console.log('ユーザー情報:', data);
+})
+.catch(error => {
+  console.error('エラー:', error);
+});
+            </div>
+            
+            <h3>例2：新しいユーザーを作成</h3>
+            <div class="code-block">
+fetch('https://api.example.com/users', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-token-here',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: '佐藤花子',
+    email: 'sato@example.com'
+  })
+})
+.then(response => response.json())
+.then(data => {
+  console.log('新しいユーザーが作成されました:', data);
+});
+            </div>
+            
+            <h3>例3：Python（requests）を使用</h3>
+            <div class="code-block">
+import requests
+
+# ヘッダーに認証情報を含める
+headers = {
+    'Authorization': 'Bearer your-token-here',
+    'Content-Type': 'application/json'
+}
+
+# ユーザー情報を取得
+response = requests.get('https://api.example.com/users/123', headers=headers)
+
+if response.status_code == 200:
+    user_data = response.json()
+    print(f"ユーザー名: {user_data['name']}")
+else:
+    print(f"エラーが発生しました: {response.status_code}")
+            </div>
+
+            <div class="nav-links">
+                <a href="#authentication" class="nav-prev">認証について</a>
+                <a href="#tools" class="nav-next">便利なツール</a>
+            </div>
+        </section>
+
+        <section id="tools" class="section">
+            <h2>🛠️ 便利なツール</h2>
+            
+            <h3>API開発・テスト用ツール</h3>
+            
+            <div class="example">
+                <h4>1. Postman</h4>
+                <ul>
+                    <li>視覚的にAPIをテストできる</li>
+                    <li>コレクション機能でAPIをまとめて管理</li>
+                    <li>初心者におすすめ</li>
+                </ul>
+            </div>
+            
+            <div class="example">
+                <h4>2. curl（コマンドライン）</h4>
+                <div class="code-block">
+# GET リクエスト
+curl -X GET "https://api.example.com/users/123" \
+     -H "Authorization: Bearer your-token-here"
+
+# POST リクエスト
+curl -X POST "https://api.example.com/users" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer your-token-here" \
+     -d '{"name":"佐藤花子","email":"sato@example.com"}'
+                </div>
+            </div>
+            
+            <div class="example">
+                <h4>3. ブラウザの開発者ツール</h4>
+                <ul>
+                    <li>F12キーで開く</li>
+                    <li>Networkタブでリクエスト/レスポンスを確認</li>
+                    <li>Consoleタブでfetch APIを試す</li>
+                </ul>
+            </div>
+
+            <div class="nav-links">
+                <a href="#examples" class="nav-prev">実践例</a>
+                <a href="#best-practices" class="nav-next">ベストプラクティス</a>
+            </div>
+        </section>
+
+        <section id="best-practices" class="section">
+            <h2>✅ ベストプラクティス</h2>
+            
+            <h3>開発者向けのコツ</h3>
+            
+            <div class="example">
+                <h4>1. エラーハンドリングを忘れずに</h4>
+                <div class="code-block">
+fetch('/api/data')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => console.log(data))
+  .catch(error => console.error('エラーが発生しました:', error));
+                </div>
+            </div>
+            
+            <div class="example">
+                <h4>2. APIキーは安全に管理</h4>
+                <ul>
+                    <li>環境変数に保存する</li>
+                    <li>コードに直接書かない</li>
+                    <li>公開リポジトリにコミットしない</li>
+                </ul>
+            </div>
+            
+            <div class="example">
+                <h4>3. レート制限を理解する</h4>
+                <ul>
+                    <li>1分間に何回までリクエストできるかを確認</li>
+                    <li>制限を超えないよう調整</li>
+                    <li>429エラーが出たら少し待つ</li>
+                </ul>
+            </div>
+            
+            <div class="example">
+                <h4>4. APIドキュメントを読む習慣をつける</h4>
+                <ul>
+                    <li>パラメータの形式を確認</li>
+                    <li>レスポンスの構造を理解</li>
+                    <li>エラーコードの意味を把握</li>
+                </ul>
+            </div>
+
+            <div class="nav-links">
+                <a href="#tools" class="nav-prev">便利なツール</a>
+                <a href="#" class="nav-next">TOPに戻る</a>
+            </div>
+        </section>
+
+        <div class="section">
+            <h2>🎓 まとめ</h2>
+            <div class="highlight">
+                <h3>APIマスターへの道のり</h3>
+                <ol>
+                    <li><strong>基本概念の理解</strong> - APIとは何かを理解する</li>
+                    <li><strong>HTTPメソッドの習得</strong> - GET、POST、PUT、DELETEを使い分ける</li>
+                    <li><strong>ツールに慣れる</strong> - PostmanやcurlでAPIをテストする</li>
+                    <li><strong>実際に作ってみる</strong> - 簡単なAPIを使ったアプリを作成</li>
+                    <li><strong>エラーハンドリング</strong> - 適切なエラー処理を実装</li>
+                </ol>
+                
+                <p style="margin-top: 20px;"><strong>🚀 始めるのに最適な無料API</strong></p>
+                <ul>
+                    <li><strong>JSONPlaceholder</strong> - テスト用のサンプルAPI</li>
+                    <li><strong>OpenWeatherMap</strong> - 天気情報API</li>
+                    <li><strong>GitHub API</strong> - GitHubのデータにアクセス</li>
+                    <li><strong>Cat Facts API</strong> - 猫の豆知識API（認証不要）</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="guide-navigation">
+            <a href="nextjs-api-usage-beginner.html">
+                <span>📚</span>
+                Next.js API入門ガイド
+            </a>
+            <a href="index.html">
+                <span>🏠</span>
+                APIガイドホーム
+            </a>
+        </div>
+
+        <footer style="text-align: center; margin-top: 50px; padding: 30px; background: #667eea; color: white; border-radius: 10px;">
+            <h3>🎉 APIの世界へようこそ！</h3>
+            <p>このドキュメントがあなたのAPI学習の第一歩になることを願っています。<br>
+            実際に手を動かして、たくさん試行錯誤してみてください！</p>
+            <div class="nav-links" style="margin-top: 20px; border: none;">
+                <a href="#" class="nav-prev">TOPに戻る</a>
+                <a href="nextjs-api-usage-beginner.html" class="nav-next">Next.js API入門ガイドへ</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // スムーズスクロール
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // ページトップへ戻るボタン
+        const backToTop = document.createElement('button');
+        backToTop.innerHTML = '↑ トップへ';
+        backToTop.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        `;
+        
+        document.body.appendChild(backToTop);
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+        
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // コードブロックにコピーボタンを追加
+        document.querySelectorAll('.code-block').forEach(block => {
+            const copyBtn = document.createElement('button');
+            copyBtn.innerHTML = '📋 コピー';
+            copyBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #4a5568;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+            `;
+            
+            block.style.position = 'relative';
+            block.appendChild(copyBtn);
+            
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(block.textContent.replace('📋 コピー', '').trim());
+                copyBtn.innerHTML = '✅ コピー済み';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '📋 コピー';
+                }, 2000);
+            });
+        });
+    </script>
+    <script src="js/header.js"></script>
+</body>
+</html>

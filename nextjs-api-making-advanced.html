@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next.js API の作り方 - 上級者向けガイド</title>
+    <link rel="stylesheet" href="css/advanced.css">
+    <link rel="stylesheet" href="css/header.css">
+    <style>body { padding-top: 70px; }</style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <h1>Next.js API の作り方 - 上級者向けガイド</h1>
+
+        <div class="topic">
+            <h2>1. 高度なミドルウェアパターン</h2>
+            <p>複数のミドルウェアを組み合わせた高度な認証と認可の実装</p>
+            <div class="code-block">
+                <pre>
+// middleware/withAuth.ts
+import { verify } from 'jsonwebtoken'
+import { NextApiRequest, NextApiResponse } from 'next'
+
+export interface AuthenticatedRequest extends NextApiRequest {
+    user?: {
+        id: string
+        role: string
+    }
+}
+
+export function withAuth(handler: (
+    req: AuthenticatedRequest,
+    res: NextApiResponse
+) => Promise<void>) {
+    return async (req: NextApiRequest, res: NextApiResponse) => {
+        try {
+            const token = req.headers.authorization?.split(' ')[1]
+            if (!token) {
+                return res.status(401).json({ error: '認証が必要です' })
+            }
+
+            const decoded = verify(token, process.env.JWT_SECRET!)
+            ;(req as AuthenticatedRequest).user = decoded as any
+
+            return handler(req as AuthenticatedRequest, res)
+        } catch (error) {
+            return res.status(401).json({ error: '無効なトークンです' })
+        }
+    }
+}
+
+// middleware/withRole.ts
+export function withRole(role: string) {
+    return function(handler: (
+        req: AuthenticatedRequest,
+        res: NextApiResponse
+    ) => Promise<void>) {
+        return async (req: AuthenticatedRequest, res: NextApiResponse) => {
+            if (req.user?.role !== role) {
+                return res.status(403).json({ 
+                    error: 'アクセス権限がありません' 
+                })
+            }
+            return handler(req, res)
+        }
+    }
+}
+
+// pages/api/admin/users.ts
+import { withAuth } from '@/middleware/withAuth'
+import { withRole } from '@/middleware/withRole'
+
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    // 管理者用の処理
+}
+
+export default withAuth(withRole('admin')(handler))</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>2. キャッシュ戦略の実装</h2>
+            <p>Redis を使用した高度なキャッシュ戦略の実装例です。</p>
+            <div class="code-block">
+                <pre>
+// lib/redis.ts
+import Redis from 'ioredis'
+import { NextApiResponse } from 'next'
+
+const redis = new Redis(process.env.REDIS_URL)
+
+export interface CacheConfig {
+    ttl: number
+    prefix?: string
+}
+
+export function withCache(
+    handler: Function,
+    config: CacheConfig
+) {
+    return async (req: any, res: NextApiResponse) => {
+        const key = `${config.prefix || ''}:${req.url}`
+        
+        try {
+            // キャッシュの確認
+            const cached = await redis.get(key)
+            if (cached) {
+                const data = JSON.parse(cached)
+                return res.status(200).json(data)
+            }
+
+            // カスタムレスポンスハンドラ
+            const originalJson = res.json
+            res.json = async function(data: any) {
+                await redis.setex(key, config.ttl, JSON.stringify(data))
+                return originalJson.call(this, data)
+            }
+
+            return handler(req, res)
+        } catch (error) {
+            console.error('Cache error:', error)
+            return handler(req, res)
+        }
+    }
+}
+
+// pages/api/products.ts
+import { withCache } from '@/lib/redis'
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const products = await fetchProducts()
+    res.json(products)
+}
+
+export default withCache(handler, {
+    ttl: 3600,
+    prefix: 'products'
+})</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>3. GraphQLの統合</h2>
+            <p>Next.jsのAPIルートでGraphQLサーバーを実装する例です。</p>
+            <div class="code-block">
+                <pre>
+// pages/api/graphql.ts
+import { ApolloServer } from 'apollo-server-micro'
+import { makeExecutableSchema } from '@graphql-tools/schema'
+import { typeDefs } from '@/graphql/schema'
+import { resolvers } from '@/graphql/resolvers'
+
+const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers,
+})
+
+const server = new ApolloServer({
+    schema,
+    context: ({ req }) => {
+        // コンテキストの設定
+        return {
+            user: req.user,
+            // データベース接続などの追加
+        }
+    },
+})
+
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+}
+
+const startServer = server.start()
+
+export default async function handler(req, res) {
+    await startServer
+    await server.createHandler({
+        path: '/api/graphql',
+    })(req, res)
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>4. WebSocket APIの実装</h2>
+            <p>リアルタイム通信のための高度なWebSocket実装です。</p>
+            <div class="code-block">
+                <pre>
+// pages/api/socket.ts
+import { Server as NetServer } from 'http'
+import { Server as SocketServer } from 'socket.io'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { verify } from 'jsonwebtoken'
+
+interface SocketRequest extends NextApiRequest {
+    socket: any
+}
+
+export const config = {
+    api: {
+        bodyParser: false,
+    }
+}
+
+async function SocketHandler(req: SocketRequest, res: NextApiResponse) {
+    if (!res.socket.server.io) {
+        const httpServer: NetServer = res.socket.server as any
+        const io = new SocketServer(httpServer, {
+            path: '/api/socket',
+            addTrailingSlash: false,
+        })
+
+        // 認証ミドルウェア
+        io.use(async (socket, next) => {
+            try {
+                const token = socket.handshake.auth.token
+                const decoded = verify(token, process.env.JWT_SECRET!)
+                socket.user = decoded
+                next()
+            } catch (err) {
+                next(new Error('Authentication error'))
+            }
+        })
+
+        // 接続ハンドリング
+        io.on('connection', (socket) => {
+            console.log(`Client connected: ${socket.id}`)
+
+            socket.on('join-room', (roomId) => {
+                socket.join(roomId)
+            })
+
+            socket.on('message', async (data) => {
+                // メッセージの保存とブロードキャスト
+                await saveMessage(data)
+                io.to(data.roomId).emit('message', data)
+            })
+
+            socket.on('disconnect', () => {
+                console.log(`Client disconnected: ${socket.id}`)
+            })
+        })
+
+        res.socket.server.io = io
+    }
+
+    res.end()
+}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>5. APIバージョニングと段階的ロールアウト</h2>
+            <p>APIのバージョン管理と段階的なデプロイメントの実装例です。</p>
+            <div class="code-block">
+                <pre>
+// lib/versioning.ts
+import { NextApiRequest, NextApiResponse } from 'next'
+
+interface VersionConfig {
+    v1?: Function
+    v2?: Function
+    default: Function
+}
+
+export function withVersioning(config: VersionConfig) {
+    return async (req: NextApiRequest, res: NextApiResponse) => {
+        const version = req.headers['api-version'] as string
+        const userGroup = req.headers['user-group'] as string
+
+        // A/Bテストやカナリアリリースの制御
+        if (version === 'v2' && userGroup === 'beta') {
+            return config.v2?.(req, res) || config.default(req, res)
+        }
+
+        // バージョンに基づくルーティング
+        switch (version) {
+            case 'v1':
+                return config.v1?.(req, res) || config.default(req, res)
+            case 'v2':
+                return config.v2?.(req, res) || config.default(req, res)
+            default:
+                return config.default(req, res)
+        }
+    }
+}
+
+// pages/api/products/[id].ts
+export default withVersioning({
+    v1: async (req: NextApiRequest, res: NextApiResponse) => {
+        // v1の実装
+    },
+    v2: async (req: NextApiRequest, res: NextApiResponse) => {
+        // v2の実装（新機能）
+    },
+    default: async (req: NextApiRequest, res: NextApiResponse) => {
+        // デフォルトの実装
+    }
+})</pre>
+            </div>
+        </div>
+
+        <div class="note">
+            <p><strong>重要な注意点:</strong></p>
+            <ul>
+                <li>本番環境では適切なセキュリティ対策を実装してください</li>
+                <li>パフォーマンスのモニタリングと最適化を行ってください</li>
+                <li>エラーログの収集と分析を忘れずに行ってください</li>
+                <li>定期的なセキュリティ監査を実施してください</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <p><a href="nextjs-api-making-beginner.html">← 初級者向けガイドへ</a></p>
+            <p><a href="index.html">トップページへ戻る</a></p>
+        </div>
+    </div>
+    <script src="js/header.js"></script>
+</body>
+</html>

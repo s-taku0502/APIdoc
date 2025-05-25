@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python API の作り方 - 上級者向けガイド</title>
+    <link rel="stylesheet" href="css/advanced.css">
+    <link rel="stylesheet" href="css/header.css">
+    <style>body { padding-top: 70px; }</style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="site-title">API Documentation</a>
+            <button class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="api_terms.html">API用語集</a>
+                <a href="nextjs-api-making-beginner.html">Next.js API作成 (初級)</a>
+                <a href="nextjs-api-making-advanced.html">Next.js API作成 (上級)</a>
+                <a href="python-api-making-beginner.html">Python API作成 (初級)</a>
+                <a href="python-api-making-advanced.html">Python API作成 (上級)</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <h1>Python API の作り方 - 上級者向けガイド</h1>
+
+        <div class="topic">
+            <h2>1. 高度な依存性注入</h2>
+            <p>カスタムな依存性注入とミドルウェアの実装例です。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI, Depends, Header, HTTPException
+from typing import Annotated, Optional
+from functools import lru_cache
+
+class Settings:
+    def __init__(self):
+        self.database_url = "postgresql://user:pass@localhost/db"
+        self.api_key = "your-secret-key"
+        self.redis_url = "redis://localhost"
+
+@lru_cache()
+def get_settings():
+    return Settings()
+
+async def verify_api_key(
+    api_key: Annotated[str, Header()],
+    settings: Settings = Depends(get_settings)
+):
+    if api_key != settings.api_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API key"
+        )
+    return api_key
+
+async def get_redis_client(
+    settings: Settings = Depends(get_settings)
+) -> Redis:
+    client = await aioredis.from_url(settings.redis_url)
+    try:
+        yield client
+    finally:
+        await client.close()
+
+app = FastAPI()
+
+@app.get("/secure-endpoint")
+async def secure_endpoint(
+    api_key: str = Depends(verify_api_key),
+    redis: Redis = Depends(get_redis_client)
+):
+    # APIキーとRedisクライアントが利用可能
+    cached_data = await redis.get("some_key")
+    return {"data": cached_data}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>2. 非同期データベース操作</h2>
+            <p>SQLAlchemyの非同期機能とプーリングの実装例です。</p>
+            <div class="code-block">
+                <pre>
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import QueuePool
+
+# 非同期エンジンの設定
+engine = create_async_engine(
+    "postgresql+asyncpg://user:pass@localhost/db",
+    poolclass=QueuePool,
+    pool_size=20,
+    max_overflow=30,
+    echo=True
+)
+
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+
+async def get_session() -> AsyncSession:
+    async with async_session() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+
+@app.post("/users/bulk")
+async def create_users(
+    users: list[UserCreate],
+    session: AsyncSession = Depends(get_session)
+):
+    try:
+        db_users = [UserModel(**user.dict()) for user in users]
+        session.add_all(db_users)
+        await session.commit()
+        return {"status": "success", "count": len(db_users)}
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>3. 高度なバリデーションとスキーマ</h2>
+            <p>Pydanticを使用した複雑なバリデーションの実装例です。</p>
+            <div class="code-block">
+                <pre>
+from pydantic import BaseModel, validator, EmailStr, constr
+from datetime import datetime
+from typing import List, Optional
+import re
+
+class Address(BaseModel):
+    street: str
+    city: str
+    postal_code: constr(regex=r'^\d{3}-\d{4}$')
+    country: str = 'Japan'
+
+    @validator('street')
+    def validate_street(cls, v):
+        if len(v) < 5:
+            raise ValueError('住所が短すぎます')
+        return v.title()
+
+class UserProfile(BaseModel):
+    username: constr(regex=r'^[a-zA-Z0-9_]{3,20}$')
+    email: EmailStr
+    full_name: str
+    birth_date: datetime
+    addresses: List[Address]
+    preferences: dict[str, str] = {}
+
+    @validator('birth_date')
+    def validate_birth_date(cls, v):
+        if v > datetime.now():
+            raise ValueError('誕生日は未来の日付にはできません')
+        return v
+
+    @validator('preferences')
+    def validate_preferences(cls, v):
+        allowed_keys = {'theme', 'language', 'timezone'}
+        if not all(key in allowed_keys for key in v.keys()):
+            raise ValueError('無効な設定キーが含まれています')
+        return v
+
+@app.post("/users/profile")
+async def create_user_profile(profile: UserProfile):
+    # バリデーション済みのデータを使用
+    return {"status": "success", "profile": profile}</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>4. キャッシュとレート制限</h2>
+            <p>Redisを使用した高度なキャッシュ戦略とレート制限の実装です。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.decorator import cache
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
+import aioredis
+
+# Redisの設定
+redis = aioredis.from_url(
+    "redis://localhost", encoding="utf8", decode_responses=True
+)
+
+@app.on_event("startup")
+async def startup():
+    # キャッシュの初期化
+    FastAPICache.init(
+        RedisBackend(redis),
+        prefix="fastapi-cache"
+    )
+    # レート制限の初期化
+    await FastAPILimiter.init(redis)
+
+@app.get(
+    "/cached-data",
+    dependencies=[
+        Depends(RateLimiter(times=10, seconds=60))
+    ]
+)
+@cache(expire=300)  # 5分間キャッシュ
+async def get_cached_data():
+    # 重い処理をシミュレート
+    result = await process_heavy_computation()
+    return result
+
+# カスタムキャッシュキー生成
+def custom_key_builder(
+    func,
+    namespace: Optional[str] = "",
+    *args,
+    **kwargs,
+):
+    prefix = FastAPICache.get_prefix()
+    cache_key = f"{prefix}:{namespace}:{func.__name__}"
+    
+    # クエリパラメータに基づくキャッシュキー
+    query_params = kwargs.get("query_params", {})
+    if query_params:
+        param_key = ":".join(
+            f"{k}={v}" for k, v in sorted(query_params.items())
+        )
+        cache_key = f"{cache_key}:{param_key}"
+    
+    return cache_key</pre>
+            </div>
+        </div>
+
+        <div class="topic">
+            <h2>5. 高度な例外処理とロギング</h2>
+            <p>構造化されたログ記録と例外処理の実装例です。</p>
+            <div class="code-block">
+                <pre>
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+import structlog
+import time
+from typing import Optional, Dict, Any
+
+# ロガーの設定
+logger = structlog.get_logger()
+
+# カスタム例外
+class BusinessLogicException(Exception):
+    def __init__(
+        self,
+        message: str,
+        error_code: str,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        self.message = message
+        self.error_code = error_code
+        self.details = details or {}
+        super().__init__(message)
+
+# ミドルウェア
+@app.middleware("http")
+async def logging_middleware(request: Request, call_next):
+    start_time = time.time()
+    
+    # リクエストIDの生成
+    request_id = str(uuid.uuid4())
+    structlog.contextvars.bind_contextvars(
+        request_id=request_id
+    )
+    
+    try:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        
+        logger.info(
+            "request_processed",
+            path=request.url.path,
+            method=request.method,
+            status_code=response.status_code,
+            duration=process_time
+        )
+        
+        response.headers["X-Request-ID"] = request_id
+        return response
+    except Exception as e:
+        logger.error(
+            "request_failed",
+            path=request.url.path,
+            method=request.method,
+            error=str(e),
+            error_type=type(e).__name__
+        )
+        raise
+
+# 例外ハンドラー
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    logger.error(
+        "http_error",
+        status_code=exc.status_code,
+        detail=exc.detail
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": "HTTPException",
+            "detail": exc.detail,
+            "status_code": exc.status_code
+        }
+    )
+
+@app.exception_handler(BusinessLogicException)
+async def business_exception_handler(
+    request: Request,
+    exc: BusinessLogicException
+):
+    logger.error(
+        "business_error",
+        error_code=exc.error_code,
+        message=exc.message,
+        details=exc.details
+    )
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": exc.error_code,
+            "message": exc.message,
+            "details": exc.details
+        }
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError
+):
+    logger.error(
+        "validation_error",
+        errors=exc.errors()
+    )
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "error": "ValidationError",
+            "detail": exc.errors()
+        }
+    )</pre>
+            </div>
+        </div>
+
+        <div class="note">
+            <p><strong>高度な実装のポイント:</strong></p>
+            <ul>
+                <li>依存性注入を活用して、テスト可能でメンテナンス性の高いコードを書く</li>
+                <li>非同期処理を適切に利用して、パフォーマンスを最適化する</li>
+                <li>堅牢なバリデーションとエラー処理を実装する</li>
+                <li>キャッシュ戦略を適切に設計して、レスポンス時間を改善する</li>
+                <li>構造化されたログを実装して、問題の追跡と分析を容易にする</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <p><a href="python-api-making-beginner.html">← 初級者向けガイドへ</a></p>
+            <p><a href="index.html">トップページへ戻る</a></p>
+        </div>
+    </div>
+    <script src="js/header.js"></script>
+</body>
+</html>
